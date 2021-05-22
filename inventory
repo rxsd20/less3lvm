@@ -1,0 +1,2 @@
+[stand]
+stand ansible_host=192.168.11.101 ansible_user=vagrant ansible_python_interpreter=/usr/bin/python3

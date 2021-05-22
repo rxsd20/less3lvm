@@ -1,0 +1,21 @@
+---
+  - name: create pv sdb
+    shell: pvcreate /dev/sdb
+
+  - name: create vg sdb
+    shell: vgcreate vg_root /dev/sdb
+
+  - name: create lv root
+    shell: lvcreate -n lv_root -l +100%FREE /dev/vg_root
+
+  - name: mkfs xfs
+    shell: mkfs.xfs /dev/vg_root/lv_root
+
+  - name: mount lv-root in mnt
+    shell: mount /dev/vg_root/lv_root /mnt
+
+  - name: copy files in mnt
+    shell: xfsdump -J - /dev/VolGroup00/LogVol00 | xfsrestore -J - /mnt
+
+  - name: bind mnt
+    shell: for i in /proc/ /sys/ /dev/ /run/ /boot/; do mount --bind $i /mnt/$i; done

@@ -1,0 +1,20 @@
+---
+  - name: install xfsdump
+    yum:
+      name: xfsdump
+
+  - name: install mdadm
+    yum:
+      name: mdadm
+
+  - name: install smartmontools
+    yum:
+      name: smartmontools
+
+  - name: install hdparm
+    yum:
+      name: hdparm
+
+  - name: install gdisk
+    yum:
+      name: gdisk
