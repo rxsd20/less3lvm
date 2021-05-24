@@ -19,3 +19,29 @@
 
   - name: bind mnt
     shell: for i in /proc/ /sys/ /dev/ /run/ /boot/; do mount --bind $i /mnt/$i; done
+
+  - name: send juke or copy bash script
+    template:
+      backup: true
+      src: chrootstage1.sh
+      dest: /home/vagrant/chrootstage1.sh
+      mode: a+x
+
+  - name: execution bash script
+    shell: /home/vagrant/chrootstage1.sh
+
+  - name: reboot
+    command: nohup bash -c "sleep 2s && reboot" &
+    async: 1
+    poll: 0
+    ignore_errors: true
+
+  - name: wait for system online
+    wait_for_connection: 
+      delay: 15
+
+  - name: out data lsblk
+    command: lsblk
+    register: lsblk
+
+  - debug: var=lsblk.stdout_lines

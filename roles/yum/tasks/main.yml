@@ -1,4 +1,8 @@
 ---
+  - name: install python3
+    yum:
+      name: python3
+
   - name: install xfsdump
     yum:
       name: xfsdump
@@ -18,3 +22,7 @@
   - name: install gdisk
     yum:
       name: gdisk
+
+  - name: install nano
+    yum:
+      name: nano
