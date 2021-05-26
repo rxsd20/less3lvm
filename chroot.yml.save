@@ -1,7 +1,0 @@
----
-- hosts: all
-  become: yes
-  tasks:
-
-  - name: grub mkconfig
-    shell: /home/vagrant/
