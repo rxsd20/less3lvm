@@ -1,0 +1,12 @@
+---
+  - name: pvcreate sdc sdd
+    shell: pvcreate /dev/sdc /dev/sdd
+
+  - name: vgcreate vg var
+    shell: vgcreate vg_var /dev/sdc /dev/sdd
+
+  - name: lvcreate vg var
+    shell: lvcreate -L 950M -m1 -n lv_var vg_var
+
+  - name: mkfs ext4 lv var
+    shell: mkfs.ext4 /dev/vg_var/lv_var

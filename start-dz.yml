@@ -4,3 +4,6 @@
     roles:
       - yum
       - stage1
+      - mirror-lvm
+      - stage2
+      - stage3

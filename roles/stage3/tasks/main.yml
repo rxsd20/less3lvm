@@ -1,0 +1,68 @@
+---
+  - name: clear lvremove lv root
+    shell: lvremove /dev/vg_root/lv_root -y
+
+  - name: vgremove vg root
+    shell: vgremove /dev/vg_root
+
+  - name: pvremove sdb
+    shell: pvremove /dev/sdb
+
+  - name: lvcreate LogVolHome
+    shell: lvcreate -n LogVol_Home -L 2G /dev/VolGroup00
+
+  - name: mkfs xfs LogVol Home
+    shell: mkfs.xfs /dev/VolGroup00/LogVol_Home
+
+  - name: mount home mnt
+    shell: mount /dev/VolGroup00/LogVol_Home /mnt/
+
+  - name: copy home new directory
+    shell: cp -aR /home/* /mnt/
+
+  - name: rm rf home old
+    file:
+      state: absent
+      path: /home/
+
+  - name: umount mnt
+    shell: umount /mnt/
+
+  - name: mount new lv home
+    shell: mount /dev/VolGroup00/LogVol_Home /home/
+
+  - name: echo fstab cool command
+    shell: echo "`blkid | grep Home | awk '{print $2}'` /home xfs defaults 0 0" >> /etc/fstab
+
+  - name: touch files
+    shell: touch /home/file{1..20}
+
+  - name: look touch files
+    command: ls -lah /home/
+    register: ls
+  - debug: var=ls.stdout_lines
+
+  - name: create snapshot home
+    shell: lvcreate -L 100MB -s -n home_snap /dev/VolGroup00/LogVol_Home
+
+  - name: experiment rm f files
+    shell: rm -f /home/file{11..20}
+
+  - name: look touch files
+    command: ls -lah /home/
+    register: ls
+  - debug: var=ls.stdout_lines
+
+  - name: umount home
+    shell: umount /home/
+
+  - name: restore snapshot home
+    shell: lvconvert --merge /dev/VolGroup00/home_snap
+
+  - name: mount home
+    shell: mount /home/
+
+  - name: look touch files
+    command: ls -lah /home/
+    register: ls
+  - debug: var=ls.stdout_lines

@@ -1,0 +1,49 @@
+---
+  - name: lvremove LogVol00
+    shell: lvremove /dev/VolGroup00/LogVol00 -y
+
+  - name: lvcreate LogVol00 8G
+    shell: lvcreate -n VolGroup00/LogVol00 -L 8G /dev/VolGroup00 -y
+
+  - name: mkfs xfs LogVol00
+    shell: mkfs.xfs /dev/VolGroup00/LogVol00
+
+  - name: mount LogVol00 mnt
+    shell: mount /dev/VolGroup00/LogVol00 /mnt
+
+  - name: dump and restore xfs
+    shell: xfsdump -J - /dev/vg_root/lv_root | xfsrestore -J - /mnt
+
+  - name: mount bind mnt
+    shell: for i in /proc/ /sys/ /dev/ /run/ /boot/; do mount --bind $i /mnt/$i; done
+
+  - name: send juke or copy bash script
+    template:
+      backup: true
+      src: chrootstage2.sh
+      dest: /home/vagrant/chrootstage2.sh
+      mode: a+x
+
+  - name: execution bash script
+    shell: /home/vagrant/chrootstage2.sh
+
+  - name: lsblk
+    command: lsblk
+    register: lsblk
+  - debug: var=lsblk.stdout_lines
+
+  - name: reboot
+    command: nohup bash -c "sleep 2s && reboot" &
+    async: 1
+    poll: 0
+    ignore_errors: true
+
+  - name: wait for system online
+    wait_for_connection: 
+      delay: 15
+
+  - name: lsblk
+    command: lsblk
+    register: lsblk
+  - debug: var=lsblk.stdout_lines
+
