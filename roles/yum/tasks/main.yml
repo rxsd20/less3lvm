@@ -26,3 +26,8 @@
   - name: install nano
     yum:
       name: nano
+
+  - name: yum install
+    yum:
+      name: libselinux-python
+      state: latest

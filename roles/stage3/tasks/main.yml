@@ -20,16 +20,38 @@
   - name: copy home new directory
     shell: cp -aR /home/* /mnt/
 
-  - name: rm rf home old
+#######replace ssh authorized keys
+
+  - name: replace ssh auth keys
+    lineinfile:
+      dest: /etc/ssh/sshd_config
+      regexp: '.ssh/authorized_keys'
+      line: 'AuthorizedKeysFile      /opt/.ssh/authorized_keys'
+
+  - name: reconfig systemctl reconfigure
+    lineinfile:
+      path: /etc/ssh/sshd_config
+      regexp: 'PasswordAuthentication no'
+      line: 'PasswordAuthentication yes'
+
+  - name: create direct
     file:
-      state: absent
-      path: /home/
+      path: /opt/.ssh/
+      state: directory
 
-  - name: umount mnt
-    shell: umount /mnt/
+  - name: copy auth key
+    copy:
+      src: /home/vagrant/.ssh/authorized_keys
+      dest: /opt/.ssh/authorized_keys
+      remote_src: yes
 
-  - name: mount new lv home
-    shell: mount /dev/VolGroup00/LogVol_Home /home/
+  - name: restart sshd
+    service: name=sshd state=restarted
+
+####### continue dz
+
+  - name: rm rf home old
+    shell: rm -rf /home/* && umount /mnt/ && mount /dev/VolGroup00/LogVol_Home /home/
 
   - name: echo fstab cool command
     shell: echo "`blkid | grep Home | awk '{print $2}'` /home xfs defaults 0 0" >> /etc/fstab
@@ -53,16 +75,32 @@
     register: ls
   - debug: var=ls.stdout_lines
 
-  - name: umount home
-    shell: umount /home/
+#  - name: umount home
+#    shell: umount /home/ && lvconvert --merge /dev/VolGroup00/home_snap && mount /home/
+#
+#  - name: restore snapshot home
+#    shell: lvconvert --merge /dev/VolGroup00/home_snap
+#  - name: mount home
+#    shell: mount /home/
 
-  - name: restore snapshot home
-    shell: lvconvert --merge /dev/VolGroup00/home_snap
+#  - name: look touch files
+#    command: ls -lah /home/
+#    register: ls
+#  - debug: var=ls.stdout_lines
 
-  - name: mount home
-    shell: mount /home/
+#### restore ssh
+  - name: restore
+    lineinfile:
+      dest: /etc/ssh/sshd_config
+      regexp: '/opt/.ssh/authorized_keys'
+      line: 'AuthorizedKeysFile      .ssh/authorized_keys'
 
-  - name: look touch files
-    command: ls -lah /home/
-    register: ls
-  - debug: var=ls.stdout_lines
+  - name: reboot
+    command: nohup bash -c "sleep 2s && reboot" &
+    async: 1
+    poll: 0
+    ignore_errors: true
+
+  - name: wait for system online
+    wait_for_connection:
+      delay: 15
